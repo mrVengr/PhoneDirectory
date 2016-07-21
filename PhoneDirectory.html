@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!-- saved from url=(0056)file:///D:/Projects/ErrorCodesSevice/Project_Readme.html -->
+<html lang="en">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <title>PhoneDirector</title>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+</head>
+<body>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+ 
+        GetAllMembers();
+ 
+        $("#editMember").click(function (event) {
+            event.preventDefault();
+            EditMember();
+        });
+ 
+        $("#addMember").click(function (event) {
+            event.preventDefault();
+            AddMember();
+        });
+ 
+    });
+    // Получение всех книг по ajax-запросу
+    function GetAllMembers() {
+         
+        $("#createBlock").css('display', 'block');
+        $("#editBlock").css('display', 'none');
+        $.ajax({
+            url: 'http://localhost:61361/api/phone',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                WriteResponse(data);
+            },
+            error: function (x, y, z) {
+                alert(x + '\n' + y + '\n' + z);
+            }
+        });
+    }
+ // Добавление новой книги
+    function AddMember() {
+        // получаем значения для добавляемой книги
+        var member = {
+            Name: $('#addName').val(),
+            Surname: $('#addSurname').val(),
+            PhoneNumber: $('#addPhoneNumber').val(),
+            Adress: $('#addAdress').val(),
+            Email: $('#addEmail').val()
+        };
+        $.ajax({
+            url: 'http://localhost:61361/api/phone',
+            type: 'POST',
+            data: JSON.stringify(member),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                GetAllMembers();
+            },
+            error: function (x, y, z) {
+                alert(x + '\n' + y + '\n' + z);
+            }
+        });
+    }
+ // Удаление книги
+    function DeleteMember(id) {
+  
+        $.ajax({
+            url: 'http://localhost:61361/api/phone/' + id,
+            type: 'DELETE',
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                GetAllMembers();
+            },
+            error: function (x, y, z) {
+                alert(x + '\n' + y + '\n' + z);
+            }
+        });
+    }
+    // редактирование книги
+    function EditMember() {
+        var id = $('#editId').val()
+        // получаем новые значения для редактируемой книги
+        var member = {
+            Name: $('#editName').val(),
+            Surname: $('#editSurname').val(),
+            PhoneNumber: $('#editPhoneNumber').val(),
+            Adress: $('#editAdress').val(),
+            Email: $('#editEmail').val(),
+            Id: $('#editId').val()
+        };
+        $.ajax({
+            url: 'http://localhost:61361/api/phone/' + id,
+            type: 'PUT',
+            data: JSON.stringify(member),
+            contentType: "application/json",
+            success: function (data) {
+                GetAllMembers();
+            },
+            error: function (x, y, z) {
+
+                alert(x + '\n' + y + '\n' + z);
+            }
+        });
+        $("#createBlock").css('display', 'block');
+        $("#editBlock").css('display', 'none');
+    }
+ // вывод полученных данных на экран
+    function WriteResponse(members) {
+        var strResult = "<table class=\"table table-striped\"><th>Name</th><th>Surname</th><th>PhoneNumber</th><th>Adress</th><th>Email</th><th></th><th></th>";
+        $.each(members, function (index, member) {
+            strResult += "<tr><td>" + member.Name + "</td><td> " + member.Surname + "</td><td>" + 
+            member.PhoneNumber + "</td><td> " + member.Adress + "</td><td>" + member.Email +
+            "</td><td><a id='editItem' data-item='" + member.Id + "' onclick='EditItem(this);' >Edit</a></td>" +
+            "<td><a id='delItem' data-item='" + member.Id + "' onclick='DeleteItem(this);' >Delete</a></td></tr>";
+        });
+        strResult += "</table>";
+        $("#tableBlock").html(strResult);     
+    }
+    // обработчик удаления
+    function DeleteItem(el) {
+         
+        // получаем id удаляемого объекта
+        var id = $(el).attr('data-item');
+
+        DeleteMember(id);
+    }
+    // обработчик редактирования
+    function EditItem (el) {
+         
+        // получаем id редактируемого объекта
+        var id = $(el).attr('data-item');
+        GetMember(id);
+    }
+    // вывод данных редактируемой книги в поля для редактирования
+    function ShowMember(member) {
+        if (member != null) {
+            $("#createBlock").css('display', 'none');
+            $("#editBlock").css('display', 'block');
+            $('#editName').val(member.Name);
+            $('#editSurname').val(member.Surname);
+            $('#editPhoneNumber').val(member.PhoneNumber);
+            $('#editAdress').val(member.Adress);
+            $('#editEmail').val(member.Email);
+            $("#editId").val(member.Id);
+        }
+        else {
+            alert("Not Exists");
+        }
+    }
+    // запрос книги на редактирование
+    function GetMember(id) {
+       
+        $.ajax({
+            url: 'http://localhost:61361/api/phone/' + id,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                ShowMember(data);
+            },
+            error: function (x, y, z) {
+                alert(x + '\n' + y + '\n' + z);
+            }
+        });
+    }
+</script>
+
+<div id="tableBlock" class="col-xs-12 col-md-9">
+</div>
+<div id="editBlock" class="col-xs-6 col-md-3">
+	<h3 class="text-center">Editing Member</h3>
+    <table class="table-condensed">
+    <tr><td><input type="hidden" id="editId" /></td><td></td></tr>
+    <tr><td><label>Name: </label></td><td><input type="text" id="editName" /></td></tr>
+    <tr><td><label>Surname: </label></td><td><input type="text" id="editSurname" /></td></tr>
+    <tr><td><label>PhoneNumber: </label></td><td><input type="text" id="editPhoneNumber" /></td></tr>
+    <tr><td><label>Adress: </label></td><td><input type="text" id="editAdress" /></td></tr>
+    <tr><td><label>Email: </label></td><td><input type="text" id="editEmail" /></td></tr>
+    </table>
+    <button id="editMember" class="btn btn-success">Save</button>
+</div>
+<div id="createBlock" class="col-xs-6 col-md-3">
+    <h3 class="text-center">Add Member</h3>
+    <table class="table-condensed">
+    <tr><td><label>Name: </label></td><td><input type="text" id="addName" /></td></tr>
+    <tr><td><label>Surname: </label></td><td><input type="text" id="addSurname" /></td></tr>
+    <tr><td><label>PhoneNumber: </label></td><td><input type="text" id="addPhoneNumber" /></td></tr>
+    <tr><td><label>Adress: </label></td><td><input type="text" id="addAdress" /></td></tr>
+    <tr><td><label>Email: </label></td><td><input type="text" id="addEmail" /></td></tr>
+     </table>
+    <button id="addMember" class="btn btn-success center-block" >Save</button>
+</div>
+
+</body></html>
